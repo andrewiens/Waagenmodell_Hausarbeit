@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Interaktives Waagenmodell zum Verstehen und Lösen linearer Gleichungen mit einer Unbekannten."
+    >
+    <meta name="theme-color" content="#173f5f">
+    <title>Gleichungen im Gleichgewicht</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body data-mode="learn">
+    <a class="skip-link" href="#main-content">Direkt zum Lernbereich</a>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <div class="brand" aria-label="Gleichungen im Gleichgewicht">
+          <span class="brand__mark" aria-hidden="true">
+            <span class="brand__beam"></span>
+            <span class="brand__stand"></span>
+          </span>
+          <div>
+            <p class="eyebrow">Interaktives Waagenmodell · Mathematik Klasse 8</p>
+            <h1>Gleichungen im Gleichgewicht</h1>
+          </div>
+        </div>
+
+        <div class="site-header__intro">
+          <p>
+            Entdecke, warum eine Gleichung im Gleichgewicht bleibt, wenn du auf
+            beiden Seiten dasselbe tust.
+          </p>
+          <button
+            class="button button--header"
+            id="open-help"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="help-dialog"
+          >
+            <span aria-hidden="true">?</span>
+            So funktioniert's
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="page-shell" tabindex="-1">
+      <noscript>
+        <div class="notice notice--error" role="alert">
+          <span class="notice__icon" aria-hidden="true">!</span>
+          <div>
+            <strong>JavaScript ist ausgeschaltet.</strong>
+            Die Waage benötigt JavaScript, damit du Gleichungen bearbeiten kannst.
+          </div>
+        </div>
+      </noscript>
+
+      <section class="setup-card" aria-labelledby="start-heading">
+        <div class="setup-card__topline">
+          <div>
+            <p class="section-kicker">Schritt 1</p>
+            <h2 id="start-heading">Wähle deinen Arbeitsmodus</h2>
+          </div>
+          <p class="privacy-note">
+            <span aria-hidden="true">✓</span>
+            Alles bleibt lokal in deinem Browser.
+          </p>
+        </div>
+
+        <fieldset class="mode-switch" aria-describedby="mode-description">
+          <legend class="sr-only">Arbeitsmodus</legend>
+
+          <input
+            class="mode-switch__input"
+            id="mode-learn"
+            name="mode"
+            type="radio"
+            value="learn"
+            checked
+          >
+          <label class="mode-switch__option" for="mode-learn">
+            <span class="mode-switch__icon" aria-hidden="true">✓</span>
+            <span>
+              <strong>Lernmodus</strong>
+              <small>Dieselbe Operation auf beiden Seiten</small>
+            </span>
+          </label>
+
+          <input
+            class="mode-switch__input"
+            id="mode-experiment"
+            name="mode"
+            type="radio"
+            value="experiment"
+          >
+          <label class="mode-switch__option" for="mode-experiment">
+            <span class="mode-switch__icon" aria-hidden="true">↗</span>
+            <span>
+              <strong>Experimentiermodus</strong>
+              <small>Probiere auch einseitige Veränderungen aus</small>
+            </span>
+          </label>
+        </fieldset>
+
+        <p id="mode-description" class="mode-description">
+          Im Lernmodus wird jede Operation automatisch auf beide Seiten angewendet.
+          So bleibt die Lösungsmenge erhalten.
+        </p>
+      </section>
+
+      <section class="equation-entry" aria-labelledby="equation-entry-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Schritt 2</p>
+            <h2 id="equation-entry-heading">Starte mit einer Gleichung</h2>
+          </div>
+          <span class="syntax-chip" aria-label="Form der unterstützten Gleichungen">
+            ax + b = cx + d
+          </span>
+        </div>
+
+        <form id="equation-form" class="equation-form" novalidate>
+          <div class="field field--equation">
+            <label for="equation-input">Lineare Gleichung mit einer Unbekannten</label>
+            <div class="input-action">
+              <input
+                id="equation-input"
+                name="equation"
+                type="text"
+                value="3x + 2 = 11"
+                placeholder="zum Beispiel: 3x + 2 = 11"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-describedby="equation-format input-error"
+              >
+              <button class="button button--primary" id="new-equation-button" type="submit">
+                Gleichung laden
+              </button>
+            </div>
+            <p id="equation-format" class="field__hint">
+              Erlaubt sind ganze Zahlen, Brüche, <em>x</em>, +, − und genau ein Gleichheitszeichen.
+            </p>
+            <p id="input-error" class="field__error" hidden></p>
+          </div>
+        </form>
+
+        <div class="examples" aria-labelledby="examples-heading">
+          <div class="examples__label">
+            <h3 id="examples-heading">Oder wähle ein Beispiel</h3>
+            <span>von leicht bis knifflig</span>
+          </div>
+          <div class="example-list">
+            <button
+              class="example-chip"
+              type="button"
+              data-equation="x + 5 = 9"
+              data-difficulty="leicht"
+            >
+              <span>x + 5 = 9</span><small>leicht</small>
+            </button>
+            <button
+              class="example-chip"
+              type="button"
+              data-equation="2x = 8"
+              data-difficulty="leicht"
+            >
+              <span>2x = 8</span><small>leicht</small>
+            </button>
+            <button
+              class="example-chip example-chip--active"
+              type="button"
+              data-equation="3x + 2 = 11"
+              data-difficulty="mittel"
+              aria-pressed="true"
+            >
+              <span>3x + 2 = 11</span><small>mittel</small>
+            </button>
+            <button
+              class="example-chip"
+              type="button"
+              data-equation="5x + 4 = 2x + 13"
+              data-difficulty="mittel"
+            >
+              <span>5x + 4 = 2x + 13</span><small>mittel</small>
+            </button>
+            <button
+              class="example-chip"
+              type="button"
+              data-equation="-x + 5 = 2"
+              data-difficulty="knifflig"
+            >
+              <span>−x + 5 = 2</span><small>knifflig</small>
+            </button>
+            <button
+              class="example-chip"
+              type="button"
+              data-equation="2x - 4 = x + 5"
+              data-difficulty="knifflig"
+            >
+              <span>2x − 4 = x + 5</span><small>knifflig</small>
+            </button>
+            <button
+              class="example-chip example-chip--special"
+              type="button"
+              data-equation="2x + 1 = 2x + 1"
+              data-difficulty="Sonderfall"
+            >
+              <span>2x + 1 = 2x + 1</span><small>Sonderfall A</small>
+            </button>
+            <button
+              class="example-chip example-chip--special"
+              type="button"
+              data-equation="2x + 1 = 2x + 3"
+              data-difficulty="Sonderfall"
+            >
+              <span>2x + 1 = 2x + 3</span><small>Sonderfall B</small>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="learning-grid">
+        <section class="model-card" aria-labelledby="model-heading">
+          <div class="model-card__header">
+            <div>
+              <p class="section-kicker">Schritt 3</p>
+              <h2 id="model-heading">Beobachte das Gleichgewicht</h2>
+            </div>
+            <span
+              id="balance-status"
+              class="status-badge status-badge--balanced"
+              data-state="balanced"
+            >
+              <span aria-hidden="true">✓</span>
+              Im Gleichgewicht
+            </span>
+          </div>
+
+          <div class="symbolic-equation" aria-labelledby="symbolic-heading">
+            <span id="symbolic-heading" class="symbolic-equation__label">Aktuelle Gleichung</span>
+            <div id="equation-display" class="symbolic-equation__value">
+              <span class="equation-side" data-equation-side="left">3x + 2</span>
+              <span class="equals-sign" aria-label="ist gleich">=</span>
+              <span class="equation-side" data-equation-side="right">11</span>
+            </div>
+            <div id="current-operation" class="operation-line">
+              Wähle unten deine erste Operation.
+            </div>
+          </div>
+
+          <figure
+            id="scale"
+            class="balance"
+            data-balance-state="balanced"
+            data-visual-mode="concrete"
+            aria-labelledby="scale-caption"
+            aria-describedby="scale-description"
+          >
+            <figcaption id="scale-caption" class="sr-only">
+              Waagenmodell der aktuellen Gleichung
+            </figcaption>
+            <p id="scale-description" class="sr-only">
+              Linke und rechte Seite haben bei der Lösung denselben Wert. Die Waage ist ausgeglichen.
+            </p>
+
+            <div class="balance__stage">
+              <div id="scale-beam" class="balance__beam" aria-hidden="true">
+                <span class="balance__beam-cap balance__beam-cap--left"></span>
+                <span class="balance__beam-cap balance__beam-cap--right"></span>
+              </div>
+
+              <div class="balance__side balance__side--left">
+                <span class="balance__cord balance__cord--left" aria-hidden="true"></span>
+                <span class="balance__cord balance__cord--right" aria-hidden="true"></span>
+                <div id="left-pan" class="balance__pan">
+                  <span class="balance__pan-label">Linke Seite</span>
+                  <div id="left-items" class="balance__items" data-side="left">
+                    <button class="term-tile x-tile" type="button" data-piece-kind="x">x</button>
+                    <button class="term-tile x-tile" type="button" data-piece-kind="x">x</button>
+                    <button class="term-tile x-tile" type="button" data-piece-kind="x">x</button>
+                    <button class="term-tile unit-tile grouped-tile" type="button" data-piece-kind="unit">2</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="balance__side balance__side--right">
+                <span class="balance__cord balance__cord--left" aria-hidden="true"></span>
+                <span class="balance__cord balance__cord--right" aria-hidden="true"></span>
+                <div id="right-pan" class="balance__pan">
+                  <span class="balance__pan-label">Rechte Seite</span>
+                  <div id="right-items" class="balance__items" data-side="right">
+                    <button class="term-tile unit-tile grouped-tile" type="button" data-piece-kind="unit">11</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="balance__pivot" aria-hidden="true"></div>
+              <div class="balance__stand" aria-hidden="true"></div>
+              <div class="balance__base" aria-hidden="true"></div>
+            </div>
+
+            <div class="side-summary" aria-hidden="true">
+              <div>
+                <span>Linker Term</span>
+                <span id="left-expression">3x + 2</span>
+              </div>
+              <span class="side-summary__relation">=</span>
+              <div>
+                <span>Rechter Term</span>
+                <span id="right-expression">11</span>
+              </div>
+            </div>
+          </figure>
+
+          <section class="scale-controls" aria-labelledby="scale-controls-heading">
+            <div class="scale-controls__intro">
+              <h3 id="scale-controls-heading">Waagschalen direkt bedienen</h3>
+              <p id="scale-controls-hint">
+                Im Lernmodus wird dieselbe Änderung nach deiner Bestätigung auf beiden Seiten ausgeführt.
+                Im Experimentiermodus änderst du nur die gewählte Seite.
+              </p>
+            </div>
+
+            <div class="scale-control-grid">
+              <div class="scale-control" aria-labelledby="left-controls-heading">
+                <h4 id="left-controls-heading">Linke Schale</h4>
+                <div class="scale-control__buttons" aria-describedby="scale-controls-hint">
+                  <button type="button" data-scale-action="addUnit" data-side="left" aria-label="Links ein Einheitsgewicht hinzufügen">+1</button>
+                  <button type="button" data-scale-action="removeUnit" data-side="left" aria-label="Links ein Einheitsgewicht entfernen">−1</button>
+                  <button type="button" data-scale-action="addX" data-side="left" aria-label="Links eine x-Box hinzufügen">+x</button>
+                  <button type="button" data-scale-action="removeX" data-side="left" aria-label="Links eine x-Box entfernen">−x</button>
+                </div>
+              </div>
+
+              <div class="scale-control" aria-labelledby="right-controls-heading">
+                <h4 id="right-controls-heading">Rechte Schale</h4>
+                <div class="scale-control__buttons" aria-describedby="scale-controls-hint">
+                  <button type="button" data-scale-action="addUnit" data-side="right" aria-label="Rechts ein Einheitsgewicht hinzufügen">+1</button>
+                  <button type="button" data-scale-action="removeUnit" data-side="right" aria-label="Rechts ein Einheitsgewicht entfernen">−1</button>
+                  <button type="button" data-scale-action="addX" data-side="right" aria-label="Rechts eine x-Box hinzufügen">+x</button>
+                  <button type="button" data-scale-action="removeX" data-side="right" aria-label="Rechts eine x-Box entfernen">−x</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="piece-selection" class="piece-selection" hidden>
+              <p id="piece-selection-text"></p>
+              <button class="button button--small button--secondary" id="remove-selected-piece" type="button">
+                Ausgewähltes Element entfernen
+              </button>
+            </div>
+          </section>
+
+          <div class="model-legend" aria-label="Legende zum Waagenmodell">
+            <span><i class="legend-swatch legend-swatch--x" aria-hidden="true">x</i> x-Box</span>
+            <span><i class="legend-swatch legend-swatch--weight" aria-hidden="true">+</i> Zahlgewicht</span>
+            <span><i class="legend-swatch legend-swatch--symbolic" aria-hidden="true">−</i> symbolischer Term</span>
+          </div>
+
+          <aside id="model-note" class="notice notice--model" hidden>
+            <span class="notice__icon" aria-hidden="true">i</span>
+            <div>
+              <strong>Hier zeigt das Waagenmodell seine Grenze.</strong>
+              <p id="model-note-text">
+                Negative Terme sind keine echten Gewichte. Deshalb werden sie bewusst symbolisch dargestellt.
+              </p>
+            </div>
+          </aside>
+        </section>
+
+        <aside class="workbench" aria-labelledby="workbench-heading">
+          <div class="workbench__heading">
+            <p class="section-kicker">Schritt 4</p>
+            <h2 id="workbench-heading">Führe eine Umformung aus</h2>
+          </div>
+
+          <form id="operation-form" class="operation-form" novalidate>
+            <div class="field">
+              <label id="operation-value-label" for="operation-value">Zahl für die Operation</label>
+              <div class="value-input">
+                <input
+                  id="operation-value"
+                  name="operation-value"
+                  type="text"
+                  value="2"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  aria-describedby="value-hint operation-error"
+                >
+              </div>
+              <p id="value-hint" class="field__hint">Auch Brüche wie 1/2 oder −3/4 sind möglich.</p>
+              <p id="operation-error" class="field__error" hidden></p>
+            </div>
+
+            <div id="operation-preview" class="operation-preview" aria-live="off">
+              <strong>Vorschau mit dem aktuellen Wert:</strong>
+              <span data-operation-preview="add">| +2</span>
+              <span data-operation-preview="subtract">| −2</span>
+              <span data-operation-preview="multiply">| ·2</span>
+              <span data-operation-preview="divide">| :2</span>
+            </div>
+
+            <fieldset class="operation-group">
+              <legend>Mit einer Zahl</legend>
+              <div class="operation-buttons">
+                <button class="operation-choice" type="button" data-operation-kind="add">
+                  <strong>+ Zahl</strong><small data-button-preview="add">| +2</small>
+                </button>
+                <button class="operation-choice" type="button" data-operation-kind="subtract">
+                  <strong>− Zahl</strong><small data-button-preview="subtract">| −2</small>
+                </button>
+                <button class="operation-choice" type="button" data-operation-kind="multiply">
+                  <strong>· Zahl</strong><small data-button-preview="multiply">| ·2</small>
+                </button>
+                <button class="operation-choice" type="button" data-operation-kind="divide">
+                  <strong>: Zahl</strong><small data-button-preview="divide">| :2</small>
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset class="operation-group">
+              <legend>Mit der Variablen</legend>
+              <div class="operation-buttons operation-buttons--variable">
+                <button class="operation-choice" type="button" data-operation-kind="addX">
+                  <strong>+x</strong><small>| +x</small>
+                </button>
+                <button class="operation-choice" type="button" data-operation-kind="subtractX">
+                  <strong>−x</strong><small>| −x</small>
+                </button>
+              </div>
+              <p class="field__hint">Die x-Buttons arbeiten immer mit genau einer x-Box.</p>
+            </fieldset>
+
+            <fieldset
+              id="side-selection"
+              class="side-selection"
+              data-experiment-only
+              aria-describedby="side-selection-hint"
+              hidden
+            >
+              <legend>Auf welcher Seite?</legend>
+              <div class="side-selection__options">
+                <input id="target-both" name="target-side" type="radio" value="both" checked>
+                <label for="target-both">Beide</label>
+                <input id="target-left" name="target-side" type="radio" value="left">
+                <label for="target-left">Nur links</label>
+                <input id="target-right" name="target-side" type="radio" value="right">
+                <label for="target-right">Nur rechts</label>
+              </div>
+              <p id="side-selection-hint" class="field__hint">
+                Eine einseitige Veränderung ist keine allgemeine Äquivalenzregel. Meist kippt die Waage;
+                in Sonderfällen bleibt sie zufällig ausgeglichen und zeigt stattdessen einen Warnstatus.
+              </p>
+            </fieldset>
+
+          </form>
+
+          <div class="or-divider"><span>oder</span></div>
+
+          <button class="button button--secondary button--wide" id="simplify-button" type="button">
+            <span aria-hidden="true">≡</span>
+            Gleichartige Terme zusammenfassen
+          </button>
+
+          <div class="principle-card">
+            <span class="principle-card__icon" aria-hidden="true">=</span>
+            <p>
+              <strong>Äquivalenzprinzip:</strong> Auf beiden Seiten dieselbe Operation –
+              dadurch bleibt die Lösungsmenge gleich.
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <section
+        id="feedback"
+        class="feedback feedback--info"
+        data-tone="info"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span id="feedback-icon" class="feedback__icon" aria-hidden="true">i</span>
+        <div class="feedback__content">
+          <h2 id="feedback-title">Dein nächster Schritt</h2>
+          <p id="feedback-message">
+            Überlege zuerst: Welche Zahl stört neben dem x-Term? Wähle dann eine passende Operation.
+          </p>
+        </div>
+      </section>
+
+      <section id="solution-panel" class="reveal-panel reveal-panel--solution" hidden>
+        <div>
+          <p class="section-kicker">Lösung der Ausgangsgleichung</p>
+          <h2 id="solution-heading">Lösung</h2>
+          <div id="solution-content" class="reveal-panel__answer"></div>
+          <p id="solution-explanation"></p>
+        </div>
+        <button class="icon-button" type="button" data-close-panel="solution-panel" aria-label="Lösung ausblenden">×</button>
+      </section>
+
+      <section id="hint-panel" class="reveal-panel reveal-panel--hint" hidden>
+        <div>
+          <p class="section-kicker">Denkanstoß <span id="hint-level">1</span> von 3</p>
+          <h2 id="hint-heading">Ein kleiner Hinweis</h2>
+          <p id="hint-content">Schau dir zuerst die Zahlen ohne x an.</p>
+        </div>
+        <div class="reveal-panel__actions">
+          <button class="button button--small button--secondary" id="next-hint-button" type="button">
+            Nächster Hinweis
+          </button>
+          <button class="icon-button" type="button" data-close-panel="hint-panel" aria-label="Hinweis ausblenden">×</button>
+        </div>
+      </section>
+
+      <section class="history-card" aria-labelledby="history-heading">
+        <div class="history-card__header">
+          <div>
+            <p class="section-kicker">Dein Lösungsweg</p>
+            <h2 id="history-heading">Umformungsverlauf</h2>
+          </div>
+          <span id="step-counter" class="step-counter">0 Schritte</span>
+        </div>
+
+        <ol id="history-list" class="history-list">
+          <li class="history-step history-step--initial" data-history-index="0">
+            <span class="history-step__marker" aria-hidden="true">Start</span>
+            <div class="history-step__body">
+              <p class="history-step__equation">3x + 2 = 11</p>
+              <p class="history-step__note">Ausgangsgleichung</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="history-actions" aria-label="Aktionen für den Lösungsweg">
+          <button class="button button--secondary" id="undo-button" type="button" disabled>
+            <span aria-hidden="true">↶</span>
+            Letzten Schritt rückgängig
+          </button>
+          <button class="button button--secondary" id="restore-button" type="button">
+            <span aria-hidden="true">↺</span>
+            Ausgangsgleichung
+          </button>
+          <button class="button button--ghost" id="reset-button" type="button">
+            Verlauf zurücksetzen
+          </button>
+          <button class="button button--primary" id="pdf-download-button" type="button" disabled>
+            <span aria-hidden="true">↓</span>
+            Lösungsweg als PDF
+          </button>
+        </div>
+        <p id="pdf-download-hint" class="field__hint">
+          Der Download wird nach dem ersten gültigen Äquivalenzschritt freigeschaltet.
+        </p>
+      </section>
+
+      <section class="support-bar" aria-label="Hilfen und weitere Aktionen">
+        <div>
+          <h2>Kommst du nicht weiter?</h2>
+          <p>Hol dir einen Hinweis oder prüfe erst am Ende die Lösung.</p>
+        </div>
+        <div class="support-bar__actions">
+          <button class="button button--secondary" id="hint-button" type="button">
+            <span aria-hidden="true">💡</span>
+            Hinweis erhalten
+          </button>
+          <button class="button button--primary" id="solution-button" type="button">
+            Lösung anzeigen
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Lernanwendung für lineare Gleichungen mit einer Unbekannten ·
+        keine Cookies, keine Übertragung von Eingaben
+      </p>
+    </footer>
+
+    <dialog id="help-dialog" class="dialog" aria-labelledby="help-dialog-title">
+      <div class="dialog__header">
+        <div>
+          <p class="section-kicker">Kurze Einführung</p>
+          <h2 id="help-dialog-title">So arbeitest du mit der Waage</h2>
+        </div>
+        <button class="icon-button" id="close-help" type="button" aria-label="Hilfe schließen">×</button>
+      </div>
+
+      <div class="dialog__body">
+        <ol class="intro-steps">
+          <li>
+            <span aria-hidden="true">1</span>
+            <div><strong>Gleichung wählen</strong><p>Gib eine Gleichung ein oder nutze ein Beispiel.</p></div>
+          </li>
+          <li>
+            <span aria-hidden="true">2</span>
+            <div><strong>Beide Seiten vergleichen</strong><p>Die beiden Terme stehen auf den Waagschalen.</p></div>
+          </li>
+          <li>
+            <span aria-hidden="true">3</span>
+            <div><strong>Passend umformen</strong><p>Führe auf beiden Seiten dieselbe Operation aus.</p></div>
+          </li>
+          <li>
+            <span aria-hidden="true">4</span>
+            <div><strong>x isolieren</strong><p>Arbeite weiter, bis x allein auf einer Seite steht.</p></div>
+          </li>
+        </ol>
+
+        <div class="dialog__tip">
+          <span aria-hidden="true">!</span>
+          <p>
+            <strong>Wichtig:</strong> Negative Terme sind keine realen negativen Gewichte.
+            Die Anwendung kennzeichnet sie deshalb als symbolische Modellteile.
+          </p>
+        </div>
+
+        <details>
+          <summary>Was ist im Experimentiermodus anders?</summary>
+          <p>
+            Dort darfst du absichtlich nur eine Seite verändern. Meist kippt die Waage. In einem
+            Fixpunkt-Sonderfall kann sie zufällig ausgeglichen bleiben; der Warnstatus zeigt trotzdem,
+            dass dies keine allgemein zulässige Äquivalenzregel ist. Du kannst den Schritt rückgängig machen.
+          </p>
+        </details>
+      </div>
+
+      <div class="dialog__footer">
+        <button class="button button--primary" type="button" data-dialog-close="help-dialog">
+          Verstanden, los geht's
+        </button>
+      </div>
+    </dialog>
+
+    <dialog id="reset-dialog" class="dialog dialog--small" aria-labelledby="reset-dialog-title">
+      <div class="dialog__header">
+        <div>
+          <p class="section-kicker">Neu beginnen</p>
+          <h2 id="reset-dialog-title">Verlauf wirklich zurücksetzen?</h2>
+        </div>
+        <button class="icon-button" type="button" data-dialog-close="reset-dialog" aria-label="Dialog schließen">×</button>
+      </div>
+      <div class="dialog__body">
+        <p>Alle bisherigen Umformungsschritte werden entfernt. Deine Ausgangsgleichung bleibt erhalten.</p>
+      </div>
+      <div class="dialog__footer dialog__footer--split">
+        <button class="button button--ghost" type="button" data-dialog-close="reset-dialog">Abbrechen</button>
+        <button class="button button--danger" id="confirm-reset-button" type="button">Zurücksetzen</button>
+      </div>
+    </dialog>
+
+    <dialog id="direct-action-dialog" class="dialog dialog--small" aria-labelledby="direct-action-title">
+      <div class="dialog__header">
+        <div>
+          <p class="section-kicker">Beide Seiten verändern</p>
+          <h2 id="direct-action-title">Gegenstück mitnehmen?</h2>
+        </div>
+        <button class="icon-button" type="button" data-dialog-close="direct-action-dialog" aria-label="Aktion abbrechen">×</button>
+      </div>
+      <div class="dialog__body">
+        <p id="direct-action-message"></p>
+        <p class="direct-action-preview" id="direct-action-preview"></p>
+      </div>
+      <div class="dialog__footer dialog__footer--split">
+        <button class="button button--ghost" type="button" data-dialog-close="direct-action-dialog">Abbrechen</button>
+        <button class="button button--primary" id="confirm-direct-action" type="button">Auf beiden Seiten ausführen</button>
+      </div>
+    </dialog>
+
+    <template id="history-step-template">
+      <li class="history-step" data-history-index="">
+        <span class="history-step__marker" aria-hidden="true"></span>
+        <div class="history-step__body">
+          <p class="history-step__before" data-history-before></p>
+          <p class="history-step__operation" data-history-operation></p>
+          <p class="history-step__equation" data-history-after></p>
+          <p class="history-step__note" data-history-note></p>
+        </div>
+        <span class="history-step__status" data-history-status></span>
+      </li>
+    </template>
+
+    <template id="model-piece-template">
+      <span class="model-piece" data-kind="" data-sign="positive"></span>
+    </template>
+  </body>
+</html>
