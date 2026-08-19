@@ -5,14 +5,14 @@
 | Merkmal | Stand |
 | --- | --- |
 | Anwendung | Gleichungen im Gleichgewicht |
-| Datum | 18. August 2026 |
+| Datum | 19. August 2026 |
 | Automatischer Testlauf | `npm test` |
 | Testwerkzeug | integrierter Node.js-Test-Runner (`node:test`) |
 | Ausführungsumgebung | Node.js v25.6.1 |
-| Ergebnis | **33/33 Tests erfolgreich** |
+| Ergebnis | **49/49 Tests erfolgreich** |
 | Fehlgeschlagen / übersprungen | 0 / 0 |
 | Manuelle Browserprüfung | **Bestanden im Codex In-App Browser** |
-| Geprüfte Ansichten | Standardansicht (ca. 1264 × 711), 360 × 800, 320 × 740 |
+| Geprüfte Ansichten der Überarbeitung | Standardansicht und 360 × 800 |
 
 Dieses Protokoll trennt automatisierte Prüfungen der Mathematik und Eingabeverarbeitung von der interaktiven und visuellen Prüfung im Codex In-App Browser. Es wird ausdrücklich nicht behauptet, dass Firefox, Safari, eine bestimmte externe Chrome-Version oder eine assistive Technik getestet wurde.
 
@@ -22,17 +22,39 @@ Ausgeführt wurden:
 
 - `tests/math.test.mjs`: 19 Tests zu Bruchrechnung, Lösungsfällen, Operationen, Verlauf und Formatierung
 - `tests/parser.test.mjs`: 14 Tests zu gültigen Eingaben, Normalisierung und konkreten Fehlerfällen
+- `tests/new-features.test.mjs`: 16 Tests zu Operationsbuttons, direkten Schalenhandlungen, Synchronität, Rückgängig und lokalem PDF-Export
 
 Der vollständige Lauf endete mit:
 
 ```text
-tests 33
-pass 33
+tests 49
+pass 49
 fail 0
 cancelled 0
 skipped 0
 todo 0
 ```
+
+### 16 neue Abnahmefälle
+
+| Nr. | Prüfung | Tatsächliches Ergebnis | Status |
+| ---: | --- | --- | :---: |
+| 1 | sechs Operationen als Buttons, keine Auswahlbox | `add`, `subtract`, `multiply`, `divide`, `addX`, `subtractX` vollständig gefunden | ✓ |
+| 2 | jeder Button führt die passende Kernoperation aus | alle sechs Ergebnisgleichungen exakt wie erwartet | ✓ |
+| 3 | frei eingegebene Zahl wird übernommen | Eingabe `3` und Subtraktion ergeben `3x - 1 = 8` | ✓ |
+| 4 | Division durch null | Fehlercode `DIVISION_BY_ZERO`, kein Zustandswechsel | ✓ |
+| 5 | Einheit direkt hinzufügen | einseitig `x = 2` → `x + 1 = 2` | ✓ |
+| 6 | Einheit direkt entfernen | einseitig `x + 2 = 4` → `x + 1 = 4` | ✓ |
+| 7 | x-Box direkt hinzufügen | einseitig `x = 2` → `x = x + 2` | ✓ |
+| 8 | x-Box direkt entfernen | einseitig `2x = x + 3` → `x = x + 3` | ✓ |
+| 9 | Lernmodus führt direkte Aktion beidseitig aus | `2x + 1 = x + 5`, `−x` → `x + 1 = 5`, äquivalent | ✓ |
+| 10 | Experimentiermodus erlaubt einseitige Aktion | `3x + 2 = 11`, links `+1` → `3x + 3 = 11`, nicht äquivalent | ✓ |
+| 11 | Modell, Gleichung und Verlauf synchron | beide Konstanten und protokollierte Vorher-/Nachher-Texte stimmen überein | ✓ |
+| 12 | direkte Handlung rückgängig | `3x + 1 = 10` wird exakt zu `3x + 2 = 11` zurückgesetzt | ✓ |
+| 13 | PDF-Button nach gültigem Schritt | zunächst deaktiviert; Freischaltbedingung ist ein vorhandener `equivalent: true`-Schritt | ✓ |
+| 14 | PDF enthält Ausgang und Schritte | PDF-Signatur, Ausgangsgleichung, Operationen und Ergebnis im Binärdokument gefunden | ✓ |
+| 15 | langer Lösungsweg | 80 Schritte erzeugen automatisch mehrere Seiten; auch Testschritt 80 ist enthalten | ✓ |
+| 16 | Browser-kompatibler lokaler Export | gültige `application/pdf`-Blob-Daten, sinnvolle `.pdf`-Datei und `%PDF-`-Signatur | ✓ |
 
 ## Pflichtfälle
 
@@ -98,7 +120,7 @@ Die Ausgangs- und Ergebnisgleichung besitzen in diesem besonderen Beispiel zufä
 
 ## Gefundene Fehler und vorgenommene Korrekturen
 
-Im dokumentierten automatisierten Abschlusslauf trat kein Testfehler auf; alle 33 Tests bestanden. Bei der statischen und manuellen Oberflächenprüfung wurden dagegen konkrete Punkte gefunden und korrigiert:
+Im dokumentierten automatisierten Abschlusslauf trat kein Testfehler auf; alle 49 Tests bestanden. Bei der statischen und manuellen Oberflächenprüfung wurden dagegen konkrete Punkte gefunden und korrigiert:
 
 | Fehlerquelle | Umsetzung im aktuellen Stand | Prüfung |
 | --- | --- | --- |
@@ -123,10 +145,14 @@ Weitere tatsächlich vorgenommene Oberflächenkorrekturen:
 | Hilfetext behauptete zunächst pauschal, jede einseitige Handlung kippe die Waage | Text nennt nun den Fixpunkt-Sonderfall und den Warnstatus ohne künstliche Kippung | mit Fixpunkt-Test und Dokumentation abgeglichen |
 | Reset-Dialog war noch nicht vollständig verdrahtet | Abbrechen und Bestätigen funktionieren; Fokusziel bleibt eindeutig | beide Wege im Browser geprüft |
 | Escape schloss den Hilfedialog in der ersten Browserprüfung nicht zuverlässig | explizite Escape-Behandlung mit Fokus-Rückgabe zur Hilfe-Schaltfläche | erneut geprüft: Dialog geschlossen, Fokus auf `open-help` |
+| Direkte Entfernung hätte im Lernmodus ohne Gegenstück ausgeführt werden können | gemeinsame Validierung prüft die angeklickte Schale und die Gegenseite vor dem Dialog | `x + 1 = x`, links `−1`: Gleichung bleibt unverändert; konkrete Erklärung nennt die rechte Schale |
+| Bestätigungsdialog brauchte eine sichtbare Verbindung zwischen Modell und Symbolik | Auswahl, Gegenstück und beide Schalen werden markiert; Vorschau zeigt die entstehende Gleichung | bei `3x + 2 = 11`, links Gewicht gewählt: ein ausgewähltes Teil, ein Gegenstück, zwei markierte Schalen, Vorschau `3x + 1 = 10` |
+| PDF-Schritte konnten ungünstig über einen Seitenwechsel getrennt werden | der Generator reserviert vor jedem Schritt ausreichend Platz und beginnt bei Bedarf eine neue A4-Seite | Langwegtest mit 80 vollständigen Schritten bestanden |
+| Fehlermeldung für ein fehlendes Einheitsgewicht war grammatisch ungenau | Artikel für x-Box und Einheitsgewicht getrennt formuliert | finale Browsermeldung: „Dort liegt kein positives Einheitsgewicht.“ |
 
 ## Manuelle Browserprüfung
 
-Die Anwendung wurde am 18. August 2026 über `python3 -m http.server 8000` im Codex In-App Browser geöffnet. HTML, CSS und alle drei JavaScript-Module wurden erfolgreich geladen; nach dem Abschlusslauf enthielt das Browserprotokoll keine Warnungen oder JavaScript-Fehler.
+Die überarbeitete Anwendung wurde am 19. August 2026 über `python3 -m http.server 4173` im Codex In-App Browser geöffnet. HTML, CSS und alle fünf JavaScript-Module wurden erfolgreich geladen; nach dem Abschlusslauf enthielt das Browserprotokoll keine Warnungen oder JavaScript-Fehler.
 
 | Manuelle Prüfung | Tatsächliches Ergebnis | Status |
 | --- | --- | :---: |
@@ -148,20 +174,45 @@ Die Anwendung wurde am 18. August 2026 über `python3 -m http.server 8000` im Co
 | Fixpunkt `x = 0`, nur links `·2` | `2x = 0`, Status „Zufällig ausgeglichen“ und korrekte Warnbegründung | ✓ |
 | dreistufige Hilfe | Strategie → x-Term-Hinweis → konkreter Vorschlag `| -2x` | ✓ |
 | Hilfe- und Reset-Dialoge | Öffnen/Schließen, Escape beim Hilfedialog, Fokus-Rückgabe, Abbrechen und Bestätigen geprüft | ✓ |
-| 360 × 800 und 320 × 740 | kein horizontaler Überlauf; Eingaben, Beispielschaltflächen, Waage und gruppierte Terme bleiben lesbar | ✓ |
+| Operationsfeld, Eingabewert `3`, Klick auf `− Zahl` | Vorschau zeigt vorab `| −3`; danach gleichzeitig `3x − 1 = 8`, Gleichgewicht, Verlauf und PDF-Freischaltung | ✓ |
+| Division durch `0` über den neuen Button | Vorschau „`:0 nicht erlaubt`“; Feldfehler gesetzt, Gleichung und Schrittzahl unverändert | ✓ |
+| vorhandenes Gewicht anklicken und entfernen | ausgewähltes linkes Gewicht, hervorgehobenes rechtes Gegenstück und zwei markierte Schalen; Bestätigung ergibt `3x + 1 = 10` und einen gültigen Verlaufsschritt | ✓ |
+| Rückgängig nach direkter Handlung | Ausgang `3x + 2 = 11` und Schrittzahl `0` atomar wiederhergestellt | ✓ |
+| fehlendes Gegenstück bei `x + 1 = x` | keine Operation; Meldung nennt fehlendes positives Einheitsgewicht auf der rechten Schale | ✓ |
+| Experimentiermodus, direkt links `+1` | `3x + 3 = 11`, `left-heavy`, „Links ist tiefer“, Verlauf „nicht äquivalent / Versuch“ | ✓ |
+| PDF-Button | nach gültigem Schritt aktiv; Browser erstellt `loesungsweg-3x-plus-2-gleich-11.pdf` und meldet eine A4-Seite | ✓ |
+| 360 × 800 | kein horizontaler Überlauf (`scrollWidth = clientWidth = 345` im Inhaltsviewport); Operationsbuttons 292 × 52 px, Schalenbuttons 44 px hoch, PDF-Button 290 px breit | ✓ |
 | Konsolenprüfung | keine Browser-Warnung und kein JavaScript-Fehler nach dem finalen Smoke-Test | ✓ |
 
 Nicht als manuell geprüft gelten eine vollständige Tab-Reihenfolge, ein echter Screenreader-Lauf, 200-%-Zoom, die aktive Betriebssystemeinstellung `prefers-reduced-motion` sowie Firefox, Safari oder eine konkrete externe Chrome-Version. Die Anwendung verwendet native Formularelemente, sichtbare `:focus-visible`-Markierungen und eine CSS-Regel für reduzierte Bewegung; diese Punkte wurden statisch geprüft, aber nicht als vollständiger assistiver Techniktest ausgegeben.
 
+## PDF-Prüfung
+
+Die reproduzierbare Datei `output/pdf/loesungsweg-3x-plus-2-gleich-11.pdf` wurde mit demselben Generator erzeugt, den die Browseroberfläche verwendet.
+
+| Prüfung | Tatsächliches Ergebnis | Status |
+| --- | --- | :---: |
+| PDF-Struktur | PDF 1.4, 3.026 Byte, nicht verschlüsselt, keine eingebetteten PDF-JavaScripts | ✓ |
+| Papierformat | `595.28 × 841.89 pt`, damit A4 | ✓ |
+| Textauslese | Titel, Datum, beide Schritte, Äquivalenzerklärung und Lösung vollständig extrahiert | ✓ |
+| deutsche Sonderzeichen | `Äquivalenzumformung`, `Lösungsmenge`, `ä`, `ö`, `ü`, `ß` korrekt extrahiert und gerendert | ✓ |
+| visuelle Renderprüfung | vollständige Seite als PNG gerendert; keine abgeschnittene Gleichung, kein Überlauf, Seitenfuß sichtbar | ✓ |
+| Mehrseitigkeit | automatisierter 80-Schritte-Test erzeugt mehrere Seiten und enthält den letzten Schritt | ✓ |
+
+Der Generator verwendet keine Laufzeitbibliothek und keine Netzwerkverbindung. Das Dokument nutzt Helvetica/Helvetica Bold mit WinAnsi-Kodierung. Es ist visuell lesbar, aber nicht als semantisch getaggtes barrierefreies PDF ausgegeben.
+
 ## Verbleibende Einschränkungen
 
-- Die automatisierten Tests decken Kernlogik und Parser ab; DOM-Ereignisse, CSS-Darstellung und Animationen wurden nur manuell im In-App Browser geprüft.
+- Die automatisierten Tests decken Kernlogik, Parser, direkte Aktionsregeln, UI-Struktur und PDF-Binärdaten ab; DOM-Ereignisse, CSS-Darstellung und Animationen wurden manuell im In-App Browser geprüft.
 - Es gibt noch keinen automatisierten End-to-End- oder visuellen Regressionstest.
 - Unterstützt wird nur `ax + b = cx + d` mit der Variablen `x`; Klammern, Potenzen, Produkte mit Variablen, Ungleichungen und Gleichungssysteme liegen außerhalb des Modells.
 - Negative Terme, negative Lösungen sowie Gleichungen ohne einzelne Lösung können nicht als reale Gewichte interpretiert werden und werden deshalb symbolisch dargestellt.
 - Die Waagenneigung ist ein didaktischer Zustandsindikator und keine physikalische Simulation.
 - Gleichartige Terme werden intern sofort normalisiert; „Terme zusammenfassen“ kann daher ohne sichtbare Änderung der Gleichungszeile bleiben.
 - Eine formale Prüfung nach einem Barrierefreiheitsstandard, ein Screenreader-Test und Tests in weiteren Browserfamilien wurden nicht durchgeführt.
+- Drag-and-drop ist nicht implementiert; alle geforderten direkten Handlungen sind über native Buttons und die auswählbaren Modellteile erreichbar.
+- Rückgängig entfernte Schritte sind nicht mehr Teil des aktuellen Verlaufs und erscheinen deshalb nicht in der PDF. Noch vorhandene Experimentierschritte, Wiederherstellungsaktionen und gespeicherte Fehlerhinweise werden gekennzeichnet exportiert.
+- Die erzeugte PDF ist nicht semantisch getaggt.
 
 ## Test erneut ausführen
 
@@ -171,4 +222,4 @@ Im Projektordner:
 npm test
 ```
 
-Ein erfolgreicher Lauf muss mit `pass 33` und `fail 0` enden. Ändert sich die Zahl der Tests, ist dieses Protokoll zusammen mit den neuen Ergebnissen zu aktualisieren.
+Ein erfolgreicher Lauf muss mit `pass 49` und `fail 0` enden. Ändert sich die Zahl der Tests, ist dieses Protokoll zusammen mit den neuen Ergebnissen zu aktualisieren.

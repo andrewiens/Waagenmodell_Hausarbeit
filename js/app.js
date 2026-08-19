@@ -7,6 +7,12 @@ import {
   solveEquation,
 } from "./math.js";
 import { parseEquation, parseScalar } from "./parser.js";
+import {
+  createDirectOperation,
+  directActionLabel,
+  validateDirectOperation,
+} from "./scale-actions.js";
+import { downloadSolutionPdf } from "./pdf.js";
 
 const DEFAULT_EQUATION = "3x + 2 = 11";
 
@@ -22,6 +28,10 @@ const state = {
   lastChangedSide: null,
   solutionRevealed: false,
   hintLevel: 0,
+  selectedPiece: null,
+  pendingDirectOperation: null,
+  directTrigger: null,
+  notes: [],
 };
 
 const byId = (id) => document.getElementById(id);
@@ -49,13 +59,18 @@ const elements = {
   modeDescription: byId("mode-description"),
   sideSelection: byId("side-selection"),
   operationForm: byId("operation-form"),
-  operationSelect: byId("operation-select"),
   operationValue: byId("operation-value"),
   operationValueLabel: byId("operation-value-label"),
   operationPreview: byId("operation-preview"),
   operationError: byId("operation-error"),
-  applyOperation: byId("apply-operation"),
   simplify: byId("simplify-button"),
+  pieceSelection: byId("piece-selection"),
+  pieceSelectionText: byId("piece-selection-text"),
+  removeSelectedPiece: byId("remove-selected-piece"),
+  directDialog: byId("direct-action-dialog"),
+  directMessage: byId("direct-action-message"),
+  directPreview: byId("direct-action-preview"),
+  confirmDirect: byId("confirm-direct-action"),
   feedback: byId("feedback"),
   feedbackIcon: byId("feedback-icon"),
   feedbackTitle: byId("feedback-title"),
@@ -80,6 +95,8 @@ const elements = {
   helpDialog: byId("help-dialog"),
   resetDialog: byId("reset-dialog"),
   confirmReset: byId("confirm-reset-button"),
+  pdfDownload: byId("pdf-download-button"),
+  pdfHint: byId("pdf-download-hint"),
 };
 
 function requiredElementsPresent() {
@@ -90,7 +107,6 @@ function requiredElementsPresent() {
     "scale",
     "leftItems",
     "rightItems",
-    "operationSelect",
     "operationValue",
     "feedback",
     "historyList",
@@ -155,6 +171,7 @@ function makeSnapshot() {
     lastChangedSide: state.lastChangedSide,
     solutionRevealed: state.solutionRevealed,
     hintLevel: state.hintLevel,
+    notesLength: state.notes.length,
   });
 }
 
@@ -165,6 +182,10 @@ function restoreSnapshot(snapshot) {
   state.lastChangedSide = snapshot.lastChangedSide;
   state.solutionRevealed = snapshot.solutionRevealed;
   state.hintLevel = snapshot.hintLevel;
+  state.notes = state.notes.slice(0, snapshot.notesLength);
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
 }
 
 function formatValue(value) {
@@ -198,15 +219,28 @@ function isVariableIsolated(equation) {
   return leftIsX || rightIsX;
 }
 
-function appendTile(container, text, classNames, label) {
-  const tile = document.createElement("span");
+function appendTile(container, text, classNames, label, options = {}) {
+  const selectable = Boolean(options.selectable);
+  const tile = document.createElement(selectable ? "button" : "span");
   tile.className = `term-tile ${classNames}`;
   tile.textContent = text;
   tile.setAttribute("aria-label", label ?? text);
+  if (selectable) {
+    tile.type = "button";
+    tile.dataset.side = options.side;
+    tile.dataset.pieceKind = options.piece;
+    tile.dataset.pieceIndex = String(options.index ?? 0);
+    tile.classList.add("term-tile--selectable");
+    const selected = state.selectedPiece?.side === options.side
+      && state.selectedPiece?.kind === options.piece
+      && state.selectedPiece?.index === (options.index ?? 0);
+    tile.classList.toggle("is-selected", selected);
+    tile.setAttribute("aria-pressed", String(selected));
+  }
   container.append(tile);
 }
 
-function renderVariableTiles(coefficient, container) {
+function renderVariableTiles(coefficient, container, side) {
   if (coefficient.isZero()) return;
 
   const negative = isNegative(coefficient);
@@ -218,7 +252,12 @@ function renderVariableTiles(coefficient, container) {
   if (smallPositiveInteger) {
     const count = Number(absolute.numerator);
     for (let index = 0; index < count; index += 1) {
-      appendTile(container, "x", "x-tile", "eine x-Box");
+      appendTile(container, "x", "x-tile", "x-Box auswählen", {
+        selectable: true,
+        side,
+        piece: "x",
+        index,
+      });
     }
     return;
   }
@@ -230,11 +269,12 @@ function renderVariableTiles(coefficient, container) {
     container,
     visibleText,
     className,
-    `${negative ? "negativer " : ""}Variablenterm ${visibleText}`,
+    `${negative ? "negativer " : ""}Variablenterm ${visibleText}${negative ? "" : "; eine x-Box daraus auswählen"}`,
+    negative ? {} : { selectable: true, side, piece: "x", index: 0 },
   );
 }
 
-function renderConstantTiles(constant, container) {
+function renderConstantTiles(constant, container, side) {
   if (constant.isZero()) return;
 
   const negative = isNegative(constant);
@@ -246,7 +286,12 @@ function renderConstantTiles(constant, container) {
   if (smallPositiveInteger) {
     const count = Number(absolute.numerator);
     for (let index = 0; index < count; index += 1) {
-      appendTile(container, "1", "unit-tile", "Einheitsgewicht 1");
+      appendTile(container, "1", "unit-tile", "Einheitsgewicht 1 auswählen", {
+        selectable: true,
+        side,
+        piece: "unit",
+        index,
+      });
     }
     return;
   }
@@ -257,14 +302,15 @@ function renderConstantTiles(constant, container) {
     container,
     visibleText,
     className,
-    `${negative ? "negativer symbolischer Term" : "zusammengefasstes Gewicht"} ${visibleText}`,
+    `${negative ? "negativer symbolischer Term" : "zusammengefasstes Gewicht"} ${visibleText}${negative ? "" : "; eine Einheit daraus auswählen"}`,
+    negative ? {} : { selectable: true, side, piece: "unit", index: 0 },
   );
 }
 
-function renderSide(side, container, sideName) {
+function renderSide(side, container, sideName, sideKey) {
   container.replaceChildren();
-  renderVariableTiles(side.x, container);
-  renderConstantTiles(side.constant, container);
+  renderVariableTiles(side.x, container, sideKey);
+  renderConstantTiles(side.constant, container, sideKey);
 
   if (container.childElementCount === 0) {
     appendTile(container, "0", "zero-tile", "Termwert null");
@@ -369,8 +415,26 @@ function computeBalance() {
 }
 
 function renderScale() {
-  renderSide(state.equation.left, elements.leftItems, "Linke");
-  renderSide(state.equation.right, elements.rightItems, "Rechte");
+  renderSide(state.equation.left, elements.leftItems, "Linke", "left");
+  renderSide(state.equation.right, elements.rightItems, "Rechte", "right");
+
+  const pending = state.pendingDirectOperation;
+  elements.leftPan?.classList.toggle(
+    "is-pending",
+    Boolean(pending && (pending.side === "both" || pending.side === "left")),
+  );
+  elements.rightPan?.classList.toggle(
+    "is-pending",
+    Boolean(pending && (pending.side === "both" || pending.side === "right")),
+  );
+
+  if (pending?.side === "both" && pending.direction === "remove") {
+    const counterpart = pending.requestedSide === "left" ? "right" : "left";
+    const candidate = document.querySelector(
+      `[data-side="${counterpart}"][data-piece-kind="${pending.piece}"]`,
+    );
+    candidate?.classList.add("is-counterpart");
+  }
 
   const explanation = modelExplanation();
   if (elements.modelNote) {
@@ -415,6 +479,22 @@ function renderScale() {
   if (elements.scaleBeam) {
     elements.scaleBeam.setAttribute("aria-label", balance.text);
   }
+}
+
+function renderPieceSelection() {
+  if (!elements.pieceSelection) return;
+  const selected = state.selectedPiece;
+  elements.pieceSelection.hidden = !selected;
+  if (!selected) {
+    setText(elements.pieceSelectionText, "");
+    return;
+  }
+  const side = selected.side === "left" ? "linken" : "rechten";
+  const piece = selected.kind === "x" ? "x-Box" : "Einheitsgewicht";
+  setText(
+    elements.pieceSelectionText,
+    `${piece} auf der ${side} Schale ausgewählt. Du kannst dieses Element jetzt entfernen.`,
+  );
 }
 
 function renderEquation() {
@@ -556,6 +636,17 @@ function renderControls() {
       : "Lösung anzeigen";
     elements.solution.setAttribute("aria-expanded", String(state.solutionRevealed));
   }
+  const hasEquivalentStep = state.history.some((step) => step.equivalent === true);
+  if (elements.pdfDownload) {
+    elements.pdfDownload.disabled = !hasEquivalentStep;
+    elements.pdfDownload.setAttribute("aria-describedby", "pdf-download-hint");
+  }
+  setText(
+    elements.pdfHint,
+    hasEquivalentStep
+      ? "Der Lösungsweg kann jetzt als echte A4-PDF-Datei gespeichert werden."
+      : "Der Download wird nach dem ersten gültigen Äquivalenzschritt freigeschaltet.",
+  );
 
   const experiment = state.mode === "experiment";
   if (elements.sideSelection) elements.sideSelection.hidden = !experiment;
@@ -578,6 +669,7 @@ function render() {
   if (!state.equation) return;
   renderEquation();
   renderScale();
+  renderPieceSelection();
   renderHistory();
   renderSolutionPanel();
   renderControls();
@@ -610,6 +702,10 @@ function loadEquation(rawEquation, source = "input") {
   state.lastChangedSide = null;
   state.solutionRevealed = false;
   state.hintLevel = 0;
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
+  state.notes = [];
   clearOperationError();
   hideHint();
   elements.equationInput.value = formatEquation(parsed);
@@ -647,7 +743,7 @@ function normalizedOperationKind(value) {
 }
 
 function operationNeedsValue(kind) {
-  return kind !== "simplify";
+  return ["add", "subtract", "multiply", "divide"].includes(kind);
 }
 
 function clearOperationError() {
@@ -664,37 +760,12 @@ function showOperationError(message) {
     elements.operationError.hidden = false;
     elements.operationError.textContent = message;
   }
+  state.notes.push(`Fehlerhinweis: ${message}`);
   setFeedback(message, "error");
 }
 
-function applySelectedOperation(event, explicitKind = null, explicitSide = null) {
-  event?.preventDefault();
-  const kind = explicitKind ?? normalizedOperationKind(elements.operationSelect.value);
-  const side = explicitSide ?? selectedTargetSide();
-  let value;
-
-  if (operationNeedsValue(kind)) {
-    try {
-      value = parseScalar(elements.operationValue.value);
-    } catch (error) {
-      showOperationError(error?.message ?? "Bitte gib eine gültige Zahl ein.");
-      elements.operationValue.focus();
-      return;
-    }
-
-    clearOperationError();
-    if (kind === "divide" && value.isZero()) {
-      showOperationError("Eine Division durch null ist nicht erlaubt. Wähle eine andere Zahl.");
-      return;
-    }
-    if (kind === "multiply" && value.isZero()) {
-      showOperationError(
-        "Mit null zu multiplizieren würde die ursprüngliche Information löschen und ist deshalb hier nicht erlaubt.",
-      );
-      return;
-    }
-  }
-
+function performOperation(operation, options = {}) {
+  const { kind, value, side } = operation;
   const before = formatEquation(state.equation);
   const snapshot = makeSnapshot();
   let result;
@@ -702,8 +773,10 @@ function applySelectedOperation(event, explicitKind = null, explicitSide = null)
   try {
     result = applyOperation(state.equation, { kind, value, side });
   } catch (error) {
-    setFeedback(error?.message ?? "Die Operation konnte nicht ausgeführt werden.", "error");
-    return;
+    const message = error?.message ?? "Die Operation konnte nicht ausgeführt werden.";
+    state.notes.push(`Fehlerhinweis: ${message}`);
+    setFeedback(message, "error");
+    return false;
   }
 
   state.undoStack.push(snapshot);
@@ -715,15 +788,22 @@ function applySelectedOperation(event, explicitKind = null, explicitSide = null)
   }
 
   const operationLabel = formatOperation(result.operation);
+  const sourceNote = options.source === "scale"
+    ? " Die Änderung wurde direkt an den Waagschalen ausgelöst."
+    : "";
   state.history.push(Object.freeze({
     before,
     operation: operationLabel,
     after: formatEquation(result.equation),
     equivalent: stepEquivalent,
+    source: options.source ?? "workbench",
     explanation: stepEquivalent
-      ? "Auf beiden Seiten wurde dieselbe zulässige Operation durchgeführt; die Lösungsmenge bleibt erhalten."
-      : `Nur die ${side === "left" ? "linke" : "rechte"} Seite wurde verändert. Dieser Schritt gehört nur zum Experiment und ist keine Äquivalenzumformung.`,
+      ? `Auf beiden Seiten wurde dieselbe zulässige Operation durchgeführt; die Lösungsmenge bleibt erhalten.${sourceNote}`
+      : `Nur die ${side === "left" ? "linke" : "rechte"} Seite wurde verändert. Dieser Schritt gehört nur zum Experiment und ist keine Äquivalenzumformung.${sourceNote}`,
   }));
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
   hideHint();
 
   const balance = computeBalance();
@@ -768,10 +848,133 @@ function applySelectedOperation(event, explicitKind = null, explicitSide = null)
   }
 
   render();
+  return true;
+}
+
+function applySelectedOperation(kind) {
+  const normalizedKind = normalizedOperationKind(kind);
+  const side = selectedTargetSide();
+  let value;
+
+  if (operationNeedsValue(normalizedKind)) {
+    try {
+      value = parseScalar(elements.operationValue.value);
+    } catch (error) {
+      showOperationError(error?.message ?? "Bitte gib eine gültige Zahl ein.");
+      elements.operationValue.focus();
+      return false;
+    }
+
+    clearOperationError();
+    if (normalizedKind === "divide" && value.isZero()) {
+      showOperationError("Eine Division durch null ist nicht erlaubt. Wähle eine andere Zahl.");
+      return false;
+    }
+    if (normalizedKind === "multiply" && value.isZero()) {
+      showOperationError(
+        "Mit null zu multiplizieren würde die ursprüngliche Information löschen und ist deshalb hier nicht erlaubt.",
+      );
+      return false;
+    }
+  } else if (normalizedKind === "addX" || normalizedKind === "subtractX") {
+    value = parseScalar("1");
+  }
+
+  return performOperation(
+    { kind: normalizedKind, value, side },
+    { source: "workbench" },
+  );
 }
 
 function combineTerms() {
-  applySelectedOperation(undefined, "simplify", "both");
+  performOperation({ kind: "simplify", side: "both" }, { source: "workbench" });
+}
+
+function closeDirectDialog(returnFocus = true) {
+  const trigger = state.directTrigger;
+  if (elements.directDialog?.open) elements.directDialog.close();
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
+  renderScale();
+  if (returnFocus) trigger?.focus();
+}
+
+function requestDirectAction(action, requestedSide) {
+  let operation;
+  try {
+    operation = createDirectOperation(action, requestedSide, state.mode);
+  } catch (error) {
+    setFeedback(error?.message ?? "Diese Waagenaktion ist nicht verfügbar.", "error");
+    return;
+  }
+
+  const validation = validateDirectOperation(state.equation, operation);
+  if (!validation.ok) {
+    state.notes.push(`Nicht ausgeführte Waagenaktion: ${validation.message}`);
+    setFeedback(validation.message, "error");
+    return;
+  }
+
+  if (state.mode === "experiment") {
+    performOperation(operation, { source: "scale" });
+    return;
+  }
+
+  state.pendingDirectOperation = operation;
+  state.directTrigger = document.activeElement;
+  const sideName = requestedSide === "left" ? "linken" : "rechten";
+  const actionName = directActionLabel(operation);
+  setText(
+    elements.directMessage,
+    `Du hast „${actionName}“ an der ${sideName} Schale gewählt. Damit die Gleichung äquivalent bleibt, wird dieselbe Änderung auch auf der anderen Seite ausgeführt.`,
+  );
+  setText(
+    elements.directPreview,
+    `${prettyMath(formatOperation(operation))} auf beiden Seiten: ${prettyMath(formatEquation(
+      applyOperation(state.equation, operation).equation,
+    ))}`,
+  );
+  renderScale();
+  if (typeof elements.directDialog?.showModal === "function") {
+    elements.directDialog.showModal();
+  } else {
+    elements.directDialog?.setAttribute("open", "");
+  }
+}
+
+function confirmDirectAction() {
+  const operation = state.pendingDirectOperation;
+  if (!operation) return;
+  const fallbackFocus = document.querySelector(
+    `[data-scale-action="${operation.action}"][data-side="${operation.requestedSide}"]`,
+  );
+  if (elements.directDialog?.open) elements.directDialog.close();
+  performOperation(operation, { source: "scale" });
+  state.directTrigger = null;
+  fallbackFocus?.focus();
+}
+
+function selectScalePiece(button) {
+  state.selectedPiece = Object.freeze({
+    side: button.dataset.side,
+    kind: button.dataset.pieceKind,
+    index: Number(button.dataset.pieceIndex ?? 0),
+  });
+  renderScale();
+  renderPieceSelection();
+  setFeedback(
+    `${state.selectedPiece.kind === "x" ? "x-Box" : "Einheitsgewicht"} ausgewählt. Nutze „Ausgewähltes Element entfernen“, um die passende Änderung vorzubereiten.`,
+    "info",
+  );
+  elements.removeSelectedPiece?.focus();
+}
+
+function removeSelectedPiece() {
+  if (!state.selectedPiece) return;
+  requestDirectAction(
+    state.selectedPiece.kind === "x" ? "removeX" : "removeUnit",
+    state.selectedPiece.side,
+  );
 }
 
 function undo() {
@@ -793,6 +996,10 @@ function resetExercise() {
   state.nonEquivalent = false;
   state.lastChangedSide = null;
   state.solutionRevealed = false;
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
+  state.notes = [];
   clearOperationError();
   hideHint();
   setFeedback("Alle Schritte wurden zurückgesetzt. Du startest wieder bei der Ausgangsgleichung.", "info");
@@ -805,6 +1012,9 @@ function restoreOriginal() {
   state.equation = state.initialEquation;
   state.nonEquivalent = false;
   state.lastChangedSide = null;
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
   hideHint();
   state.history.push(Object.freeze({
     type: "restore",
@@ -826,6 +1036,34 @@ function toggleSolution() {
     elements.solutionPanel.tabIndex = -1;
     elements.solutionPanel?.focus();
   }
+}
+
+function exportSolutionPdf() {
+  if (!state.history.some((step) => step.equivalent === true)) {
+    setFeedback("Führe zuerst mindestens einen gültigen Äquivalenzschritt aus.", "info");
+    return;
+  }
+  const solution = state.originalSolution.type === "unique"
+    ? { type: "unique", value: state.originalSolution.value.toString() }
+    : { type: state.originalSolution.type };
+  const createdAt = new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "long",
+    timeStyle: "short",
+  }).format(new Date());
+  const pdf = downloadSolutionPdf({
+    title: "Gleichungen im Gleichgewicht – Mein Lösungsweg",
+    createdAt,
+    initialEquation: formatEquation(state.initialEquation),
+    finalEquation: formatEquation(state.equation),
+    history: state.history,
+    solution,
+    nonEquivalent: state.nonEquivalent,
+    notes: state.notes,
+  });
+  setFeedback(
+    `Die PDF-Datei „${pdf.filename}“ wurde erstellt (${pdf.pageCount} ${pdf.pageCount === 1 ? "Seite" : "Seiten"}).`,
+    "success",
+  );
 }
 
 function suggestionForCurrentEquation() {
@@ -873,45 +1111,32 @@ function showHint() {
   elements.hintPanel.focus();
 }
 
-function updateOperationInput() {
-  const kind = normalizedOperationKind(elements.operationSelect.value);
-  const needsValue = operationNeedsValue(kind);
-  clearOperationError();
-  elements.operationValue.disabled = !needsValue;
-  if (elements.operationValueLabel) {
-    const labels = {
-      add: "Zahl, die addiert wird",
-      subtract: "Zahl, die subtrahiert wird",
-      multiply: "Faktor (nicht 0)",
-      divide: "Divisor (nicht 0)",
-      addX: "Koeffizient vor x",
-      subtractX: "Koeffizient vor x",
-      simplify: "Keine Zahl nötig",
-    };
-    elements.operationValueLabel.textContent = labels[kind] ?? "Zahl oder Bruch";
-  }
-  updateOperationPreview();
-}
-
 function updateOperationPreview() {
   if (!elements.operationPreview) return;
-  const kind = normalizedOperationKind(elements.operationSelect.value);
-  if (!operationNeedsValue(kind)) {
-    elements.operationPreview.textContent = "Terme zusammenfassen";
-    return;
-  }
+  const kinds = ["add", "subtract", "multiply", "divide"];
   try {
     const value = parseScalar(elements.operationValue.value);
-    elements.operationPreview.textContent = prettyMath(
-      formatOperation({ kind, value, side: "both" }),
-    );
+    kinds.forEach((kind) => {
+      const isForbiddenZero = value.isZero() && (kind === "multiply" || kind === "divide");
+      const preview = isForbiddenZero
+        ? `${kind === "divide" ? ":0" : "·0"} nicht erlaubt`
+        : prettyMath(formatOperation({ kind, value, side: "both" }));
+      document.querySelectorAll(`[data-operation-preview="${kind}"], [data-button-preview="${kind}"]`)
+        .forEach((element) => setText(element, preview));
+    });
   } catch {
-    elements.operationPreview.textContent = "| ?";
+    kinds.forEach((kind) => {
+      document.querySelectorAll(`[data-operation-preview="${kind}"], [data-button-preview="${kind}"]`)
+        .forEach((element) => setText(element, "| ?"));
+    });
   }
 }
 
 function changeMode(event) {
   state.mode = event.target.value === "experiment" ? "experiment" : "learn";
+  state.selectedPiece = null;
+  state.pendingDirectOperation = null;
+  state.directTrigger = null;
   hideHint();
   if (state.mode === "learn") {
     state.targetSide = "both";
@@ -980,12 +1205,27 @@ function bindEvents() {
     });
   });
 
-  elements.operationForm?.addEventListener("submit", applySelectedOperation);
-  if (!elements.operationForm) {
-    elements.applyOperation?.addEventListener("click", applySelectedOperation);
-  }
-  elements.operationSelect.addEventListener("change", updateOperationInput);
-  elements.operationValue.addEventListener("input", updateOperationPreview);
+  elements.operationForm?.addEventListener("submit", (event) => event.preventDefault());
+  document.querySelectorAll("[data-operation-kind]").forEach((button) => {
+    button.addEventListener("click", () => applySelectedOperation(button.dataset.operationKind));
+  });
+  elements.operationValue.addEventListener("input", () => {
+    clearOperationError();
+    updateOperationPreview();
+  });
+  document.querySelectorAll("[data-scale-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      requestDirectAction(button.dataset.scaleAction, button.dataset.side);
+    });
+  });
+  [elements.leftItems, elements.rightItems].forEach((container) => {
+    container?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-piece-kind]");
+      if (button) selectScalePiece(button);
+    });
+  });
+  elements.removeSelectedPiece?.addEventListener("click", removeSelectedPiece);
+  elements.confirmDirect?.addEventListener("click", confirmDirectAction);
   elements.simplify?.addEventListener("click", combineTerms);
   elements.undo?.addEventListener("click", undo);
   elements.reset?.addEventListener("click", () => {
@@ -1000,6 +1240,7 @@ function bindEvents() {
     elements.resetDialog?.close();
   });
   elements.restore?.addEventListener("click", restoreOriginal);
+  elements.pdfDownload?.addEventListener("click", exportSolutionPdf);
   elements.solution?.addEventListener("click", toggleSolution);
   elements.hint?.addEventListener("click", showHint);
   elements.openHelp?.addEventListener("click", showHelp);
@@ -1020,6 +1261,8 @@ function bindEvents() {
       const dialog = byId(button.dataset.dialogClose);
       if (dialog === elements.helpDialog) {
         closeHelp();
+      } else if (dialog === elements.directDialog) {
+        closeDirectDialog();
       } else if (dialog?.open) {
         dialog.close();
         elements.reset?.focus();
@@ -1035,6 +1278,9 @@ function bindEvents() {
       event.preventDefault();
       elements.resetDialog.close();
       elements.reset?.focus();
+    } else if (elements.directDialog?.open) {
+      event.preventDefault();
+      closeDirectDialog();
     }
   });
   elements.helpDialog?.addEventListener("click", (event) => {
@@ -1045,7 +1291,7 @@ function bindEvents() {
 function initialize() {
   requiredElementsPresent();
   bindEvents();
-  updateOperationInput();
+  updateOperationPreview();
   const initialText = elements.equationInput.value.trim() || DEFAULT_EQUATION;
   loadEquation(initialText, "initial");
 }

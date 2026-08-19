@@ -1,0 +1,65 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 2308 >>
+stream
+BT /F2 23 Tf 0 0 0 rg 48 793.89 Td (Gleichungen im Gleichgewicht \226 Mein) Tj ET
+BT /F2 23 Tf 0 0 0 rg 48 765.89 Td (L\366sungsweg) Tj ET
+BT /F1 11 Tf 0 0 0 rg 48 734.89 Td (Lineare Gleichungen im Waagenmodell) Tj ET
+0.75 w 0.76 0.80 0.84 RG 48 707.27 m 547.28 707.27 l S
+BT /F1 9 Tf 0 0 0 rg 48 691.27 Td (Erstellt am: 19. August 2026 um 12:00) Tj ET
+BT /F2 14 Tf 0 0 0 rg 48 664.49 Td (Ausgangsgleichung) Tj ET
+BT /F2 15 Tf 0 0 0 rg 48 641.61 Td (3x + 2 = 11) Tj ET
+BT /F2 13 Tf 0 0 0 rg 48 610.61 Td (Warum die Schritte g\374ltig sind) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 589.15 Td (Eine \304quivalenzumformung f\374hrt auf beiden Seiten dieselbe zul\344ssige Operation aus. Dadurch) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 574.95 Td (bleibt die L\366sungsmenge erhalten. Einseitige Experimentierschritte sind ausdr\374cklich als nicht) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 560.75 Td (\344quivalent markiert.) Tj ET
+BT /F2 15 Tf 0 0 0 rg 48 534.55 Td (Rechenweg) Tj ET
+BT /F2 11 Tf 0 0 0 rg 48 501.25 Td (Schritt 1: \344quivalent) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 483.63 Td (Vorher: 3x + 2 = 11) Tj ET
+BT /F2 10 Tf 0 0 0 rg 48 468.43 Td (Operation: | -2) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 453.23 Td (Nachher: 3x = 9) Tj ET
+BT /F1 9 Tf 0 0 0 rg 48 438.03 Td (Auf beiden Seiten wurde dieselbe zul\344ssige Operation durchgef\374hrt; die L\366sungsmenge bleibt erhalten.) Tj ET
+BT /F2 11 Tf 0 0 0 rg 48 415.25 Td (Schritt 2: \344quivalent) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 397.63 Td (Vorher: 3x = 9) Tj ET
+BT /F2 10 Tf 0 0 0 rg 48 382.43 Td (Operation: | :3) Tj ET
+BT /F1 10 Tf 0 0 0 rg 48 367.23 Td (Nachher: x = 3) Tj ET
+BT /F1 9 Tf 0 0 0 rg 48 352.03 Td (Beide Seiten wurden durch dieselbe Zahl ungleich null dividiert; der Schritt ist \344quivalent.) Tj ET
+0.75 w 0.76 0.80 0.84 RG 48 334.25 m 547.28 334.25 l S
+BT /F2 14 Tf 0 0 0 rg 48 318.25 Td (Aktueller Stand) Tj ET
+BT /F2 14 Tf 0 0 0 rg 48 295.37 Td (x = 3) Tj ET
+BT /F2 11 Tf 0 0 0 rg 48 269.49 Td (Genau eine L\366sung: x = 3) Tj ET
+BT /F2 12 Tf 0 0 0 rg 48 241.87 Td (Hinweise, Fehler oder zur\374ckgenommene Schritte) Tj ET
+BT /F1 9 Tf 0 0 0 rg 48 221.83 Td (- Pr\374fdatei f\374r den vollst\344ndig lokalen PDF-Export mit deutschen Sonderzeichen: \344, \366, \374, \337.) Tj ET
+BT /F1 8 Tf 0.35 0.38 0.42 rg 48 24 Td (Gleichungen im Gleichgewicht - Seite 1 von 1) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000002680 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2822
+%%EOF

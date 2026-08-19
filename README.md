@@ -23,12 +23,16 @@ Die Anwendung richtet sich vor allem an Schülerinnen und Schüler der 8. Jahrga
 - gruppierte Modellteile bei größeren Koeffizienten und Konstanten
 - Lernmodus mit automatisch beidseitigen Operationen
 - Experimentiermodus für bewusst einseitige Veränderungen
-- Addition und Subtraktion von Zahlen oder x-Termen
-- Multiplikation und Division mit einer Zahl ungleich null
+- gruppiertes Operationsfeld mit sechs großen Buttons für `+ Zahl`, `− Zahl`, `· Zahl`, `: Zahl`, `+x` und `−x`
+- live aktualisierte Operationsvorschau für ganze Zahlen, Dezimalzahlen und Brüche
+- direkt auswählbare positive Einheitsgewichte und x-Boxen auf beiden Waagschalen
+- eigene Schalenbuttons für `+1`, `−1`, `+x` und `−x`
+- Gegenstückprüfung und Bestätigungsdialog für direkte Handlungen im Lernmodus
 - sichtbares Zusammenfassen gleichartiger Terme
 - verständliche Rückmeldungen, Operationsvorschau und dreistufige Hinweise
 - Umformungsverlauf mit Ausgangsgleichung, Operation, Ergebnis und Gültigkeitskennzeichnung
 - Rückgängig, Verlauf zurücksetzen und Ausgangsgleichung wiederherstellen
+- vollständig lokaler A4-PDF-Export des Lösungswegs nach dem ersten gültigen Schritt
 - Lösung erst nach ausdrücklicher Anforderung
 - symbolische Kennzeichnung negativer Terme und weiterer Modellgrenzen
 - Tastatur-freundliche Bedienelemente, sichtbare Statusmeldungen und ARIA-Beschriftungen
@@ -39,10 +43,12 @@ Die Anwendung richtet sich vor allem an Schülerinnen und Schüler der 8. Jahrga
 1. Wähle den **Lernmodus** oder den **Experimentiermodus**.
 2. Gib eine Gleichung ein oder wähle ein Beispiel aus.
 3. Vergleiche die symbolische Gleichung mit den beiden Waagschalen.
-4. Wähle eine Operation und gib eine Zahl oder einen Koeffizienten ein. Brüche wie `1/2` sind erlaubt.
-5. Führe die Operation aus. Im Lernmodus wird sie automatisch auf beide Seiten angewendet.
-6. Verfolge den Rechenschritt und seine Begründung im Umformungsverlauf.
-7. Arbeite weiter, bis `x` isoliert ist, oder untersuche einen der beiden Sonderfälle.
+4. Gib für eine Zahlenoperation den gewünschten Wert ein. Die vier Vorschauen zeigen vorab, welcher Rechenschritt durch jeden Button entsteht. Klicke anschließend auf den passenden Operationsbutton. `+x` und `−x` arbeiten mit genau einer x-Box.
+5. Alternativ kannst du eine positive x-Box oder ein Einheitsgewicht direkt auf einer Schale auswählen und entfernen. Die Schalenbuttons fügen oder entfernen `1` beziehungsweise `x`.
+6. Bestätige im Lernmodus die markierte Änderung auf beiden Seiten. Im Experimentiermodus wird die direkt gewählte Seite sofort einzeln verändert.
+7. Verfolge den Rechenschritt und seine Begründung im Umformungsverlauf.
+8. Nach dem ersten gültigen Äquivalenzschritt kannst du den aktuellen Lösungsweg als PDF herunterladen.
+9. Arbeite weiter, bis `x` isoliert ist, oder untersuche einen der beiden Sonderfälle.
 
 Die Schaltfläche **Hinweis erhalten** gibt zunächst eine Strategie, danach einen konkreteren Hinweis und erst in der dritten Stufe einen möglichen nächsten Rechenschritt. **Lösung anzeigen** nennt die Lösung der Ausgangsgleichung, ohne sie vorher ungefragt einzublenden.
 
@@ -51,6 +57,14 @@ Die Schaltfläche **Hinweis erhalten** gibt zunächst eine Strategie, danach ein
 Im Lernmodus sind nur beidseitige Operationen möglich. Zulässige Addition, Subtraktion, Multiplikation und Division erhalten dadurch die Lösungsmenge. Division durch null und Multiplikation mit null werden verhindert; eine Multiplikation beider Seiten mit null würde die Information der Ausgangsgleichung verlieren.
 
 Im Experimentiermodus kann eine Operation nur links oder nur rechts ausgeführt werden. Der Schritt wird als Versuch und nicht als gültige Äquivalenzumformung gekennzeichnet. Bei einer eindeutig lösbaren Ausgangsgleichung vergleicht die Anwendung beide veränderten Seiten weiterhin am **Lösungswert der Ausgangsgleichung**. Sie berechnet also nicht heimlich eine neue Lösung, um die Waage wieder auszugleichen. Ein solcher Versuch kann rückgängig gemacht oder durch **Ausgangsgleichung** verworfen werden. Spätere beidseitige Schritte machen einen vorherigen einseitigen Schritt nicht nachträglich gültig.
+
+Bei einer direkten Entfernung prüft der Lernmodus zuerst, ob auf beiden Seiten ein positives Einheitsgewicht beziehungsweise eine positive x-Box vorhanden ist. Auswahl und Gegenstück werden sichtbar markiert; erst der Bestätigungsbutton führt die beidseitige Operation aus. Fehlt das Gegenstück, bleiben Gleichung und Verlauf unverändert und die Anwendung erklärt konkret, welche Schale das Modell verhindert. Negative Terme bleiben symbolisch und sind nicht als reale negative Gewichte anklickbar.
+
+### PDF-Export
+
+**Lösungsweg als PDF herunterladen** wird freigeschaltet, sobald der aktuelle Verlauf mindestens einen gültigen Äquivalenzschritt enthält. Die erzeugte A4-Datei enthält Anwendungstitel, Datum und Uhrzeit, Ausgangs- und aktuelle Gleichung, alle noch im Verlauf enthaltenen Schritte, Operationen und Gültigkeitskennzeichnungen, die Lösung beziehungsweise Lösungsmenge sowie die Erklärung des Äquivalenzprinzips. Einseitige Versuche und Wiederherstellungsaktionen werden deutlich benannt. Zuvor angezeigte Fehlerhinweise werden aufgenommen; ein mit **Rückgängig** vollständig aus dem Verlauf entfernter Schritt wird bewusst nicht als ausgeführter Schritt exportiert.
+
+Der Export wird durch das lokale Modul `js/pdf.js` erzeugt. Es gibt **keine externe PDF-Bibliothek**, keinen Upload und keinen Serveraufruf. Deutsche Sonderzeichen werden über WinAnsi-Schriftkodierung ausgegeben, Brüche bleiben als gut lesbare Schrägstrichschreibweise erhalten, und lange Wege werden automatisch auf mehrere A4-Seiten verteilt. Zusätzlich enthält das Stylesheet bereits eine druckfreundliche Ansicht der Webseite.
 
 ### Sonderfall: einseitige Fixpunktoperation
 
@@ -86,9 +100,9 @@ Voraussetzung ist eine aktuelle Node.js-Version. Es müssen keine npm-Pakete ins
 npm test
 ```
 
-Stand 18. August 2026: **33 von 33 automatisierten Node-Tests erfolgreich**, 0 fehlgeschlagen. Die Tests prüfen mathematische Kernlogik, exakte Brüche, Parser, Fehlerfälle, Äquivalenzoperationen, einseitige Veränderungen sowie Rückgängig und Zurücksetzen.
+Stand 19. August 2026: **49 von 49 automatisierten Node-Tests erfolgreich**, 0 fehlgeschlagen. Neben mathematischer Kernlogik und Parser prüfen 16 neue Abnahmefälle die Operationsbuttons, frei wählbare Zahlen, direkte `1`-/`x`-Handlungen, Lern- und Experimentiermodus, Synchronität, Rückgängig sowie ein- und mehrseitige PDF-Dateien.
 
-Zusätzlich wurde die Anwendung über einen lokalen Webserver im Codex In-App Browser geprüft. Getestet wurden der vollständige Lösungsweg, Brüche, Fehlereingaben, Division durch null, beide Modi, Kipp-Richtung, persistenter Experimentstatus, Rückgängig/Wiederherstellen, alle drei Lösungsfälle, negative Terme und Lösungen, Hinweise, Dialoge sowie Ansichten mit 360 und 320 Pixel Breite. Dabei traten nach der letzten Korrektur keine Browser-Konsolenfehler auf. Andere Browserfamilien, Screenreader und eine formale Barrierefreiheitsprüfung wurden nicht behauptet. Details stehen im [Testprotokoll](docs/testprotokoll.md).
+Zusätzlich wurde die überarbeitete Oberfläche über einen lokalen Webserver im Codex In-App Browser geprüft. Getestet wurden unter anderem Wertvorschau und Buttons, Division durch null, Elementauswahl, Gegenstückmarkierung und Bestätigung, fehlendes Gegenstück, direkter Experimentierschritt mit korrekter Kippung, Rückgängig, PDF-Freischaltung und -Erzeugung sowie die 360 × 800-Pixel-Ansicht ohne horizontalen Überlauf. Dabei traten nach der letzten Korrektur keine Browser-Konsolenfehler auf. Andere Browserfamilien, Screenreader und eine formale Barrierefreiheitsprüfung wurden nicht behauptet. Details stehen im [Testprotokoll](docs/testprotokoll.md).
 
 ## Projektstruktur
 
@@ -100,17 +114,23 @@ Zusätzlich wurde die Anwendung über einen lokalen Webserver im Codex In-App Br
 ├── js/
 │   ├── app.js              # Zustand, DOM-Darstellung und Interaktionen
 │   ├── math.js             # exakte Bruchrechnung und Gleichungsoperationen
-│   └── parser.js           # sichere Eingabeanalyse und verständliche Parserfehler
+│   ├── parser.js           # sichere Eingabeanalyse und verständliche Parserfehler
+│   ├── scale-actions.js    # Regeln für direkte Schalenhandlungen
+│   └── pdf.js              # lokaler A4-PDF-Generator und Browserdownload
 ├── tests/
 │   ├── math.test.mjs       # Tests der mathematischen Kernlogik
-│   └── parser.test.mjs     # Tests der Eingabeverarbeitung
+│   ├── parser.test.mjs     # Tests der Eingabeverarbeitung
+│   └── new-features.test.mjs # 16 Abnahmefälle der Überarbeitung
 ├── docs/
 │   └── testprotokoll.md    # dokumentierte automatische und manuelle Prüfungen
 ├── package.json            # Testbefehl, keine Laufzeitabhängigkeiten
+├── scripts/
+│   └── generate-sample-pdf.mjs # reproduzierbare PDF-Prüfdatei
+├── output/pdf/             # validierte Beispiel-PDF
 └── README.md
 ```
 
-Die drei JavaScript-Schichten sind bewusst getrennt: `math.js` kennt weder Browser noch Eingabetext, `parser.js` übersetzt Text in mathematische Daten, und `app.js` verbindet diese Logik mit der Oberfläche.
+Die JavaScript-Schichten sind bewusst getrennt: `math.js` kennt weder Browser noch Eingabetext, `parser.js` übersetzt Text in mathematische Daten, `scale-actions.js` beschreibt direkte Modellhandlungen, `pdf.js` erzeugt Binärdaten ohne DOM-Abhängigkeit, und `app.js` verbindet alles mit der Oberfläche.
 
 ## Veröffentlichung über GitHub Pages
 
@@ -127,6 +147,7 @@ Alle Verweise sind relativ und funktionieren deshalb auch auf einer GitHub-Pages
 - Es gibt keine Benutzerkonten, Datenbank, Cookies, Analyse oder Werbung.
 - Gleichungen und Rechenschritte bleiben im Arbeitsspeicher des aktuellen Browser-Tabs.
 - Die Anwendung sendet keine Eingaben an externe Server und bindet keine externen Skripte ein.
+- Auch PDF-Dateien entstehen ausschließlich im Browser aus dem aktuellen Arbeitsspeicher.
 - Beim Neuladen werden die nicht gespeicherten Arbeitsschritte verworfen.
 - Eingaben sind auf eine einzelne Gleichung und 250 Zeichen begrenzt.
 - HTML-ähnliche Zeichen werden abgewiesen; dynamische Inhalte werden als Text in das Dokument eingesetzt.
@@ -142,6 +163,8 @@ Beim Abruf über GitHub Pages gelten zusätzlich die Datenschutz- und Serverprot
 - **Übersicht vor Stückzahl:** Bis zu vier positive ganzzahlige Einheiten werden einzeln gezeigt; größere oder gebrochene Werte werden gruppiert.
 - **Exakte Rechnungen:** Brüche werden vollständig gekürzt gespeichert und ausgegeben. Das unterstützt mathematisches Argumentieren ohne Rundungsartefakte.
 - **Produktives Üben:** Die Lösung bleibt zunächst verborgen. Hinweise sind abgestuft, Fehlversuche bleiben sichtbar und können gezielt rückgängig gemacht werden.
+- **Handlung vor Symbol:** Direkte Schalenaktionen werden immer als mathematische Operation in Gleichung und Verlauf gespiegelt; eine bloße grafische Veränderung ist nicht möglich.
+- **Sichere Äquivalenzhandlung:** Der Lernmodus verlangt bei direkten Aktionen ein vorhandenes Gegenstück und eine bewusste Bestätigung, der Experimentiermodus lässt den didaktisch markierten Regelbruch zu.
 
 ## Bekannte Grenzen
 
@@ -151,5 +174,7 @@ Beim Abruf über GitHub Pages gelten zusätzlich die Datenschutz- und Serverprot
 - Gleichartige Terme werden bereits beim Einlesen und nach jeder Operation normalisiert. Die Schaltfläche zum Zusammenfassen macht diesen Schritt explizit, kann aber deshalb ohne sichtbare Textänderung bleiben.
 - Brüche erscheinen als kompakte Inline-Schreibweise und nicht als zweizeiliger Formelsatz.
 - Es wird ein Ergebnis, aber kein automatisch erzeugter vollständiger Musterlösungsweg angezeigt.
-- Der Arbeitsstand wird nicht dauerhaft gespeichert oder exportiert.
-- Eine formale Barrierefreiheitsprüfung mit Screenreader sowie Tests in weiteren Browserfamilien stehen noch aus. Die responsive Darstellung wurde im Codex In-App Browser bis 320 Pixel Breite geprüft.
+- Ein rückgängig gemachter und damit aus dem aktuellen Verlauf entfernter Schritt wird nicht in der PDF protokolliert. Wiederherstellungsaktionen, noch vorhandene Fehlversuche und Fehlerhinweise werden dagegen gekennzeichnet exportiert.
+- Die PDF verwendet integrierte Standardschriften und ist visuell lesbar, aber nicht als barrierefrei getaggtes PDF ausgegeben.
+- Drag-and-drop wurde bewusst nicht ergänzt; alle direkten Handlungen sind zuverlässig per nativen Buttons bedienbar.
+- Eine formale Barrierefreiheitsprüfung mit Screenreader sowie Tests in weiteren Browserfamilien stehen noch aus. Die überarbeitete responsive Darstellung wurde im Codex In-App Browser bei 360 × 800 Pixeln geprüft.
